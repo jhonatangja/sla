@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLA Control Tower - Evolution Pro</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --bg-body: #f8fafc;
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        body {
+            background-color: var(--bg-body);
+            font-family: 'Inter', sans-serif;
+            color: #334155;
+            padding-bottom: 80px;
+        }
+
+        /* NAVIGATION TABS */
+        .nav-tabs-custom {
+            border-bottom: 2px solid #e2e8f0; margin-bottom: 20px;
+        }
+        .nav-tabs-custom .nav-link {
+            border: none; color: #64748b; font-weight: 600; padding: 15px 25px; font-size: 1rem;
+            border-bottom: 3px solid transparent; transition: all 0.2s;
+        }
+        .nav-tabs-custom .nav-link:hover { color: var(--primary); }
+        .nav-tabs-custom .nav-link.active {
+            color: var(--primary); border-bottom-color: var(--primary); background: transparent;
+        }
+        .nav-tabs-custom .nav-link.disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* HEADER */
+        .hero-section {
+            background: white; padding: 1.5rem; border-radius: 16px;
+            box-shadow: var(--card-shadow); margin-bottom: 20px;
+        }
+        .upload-btn {
+            border: 2px dashed #cbd5e1; background: #f8fafc; padding: 12px;
+            border-radius: 10px; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; gap: 10px; min-width: 220px;
+        }
+        .upload-btn:hover { border-color: var(--primary); background: #eff6ff; }
+        .upload-btn.loaded { border-color: var(--success); background: #f0fdf4; color: #15803d; }
+
+        /* KPI CARDS (OVERVIEW) */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .kpi-card {
+            background: white; padding: 20px; border-radius: 12px; box-shadow: var(--card-shadow);
+            cursor: pointer; border-bottom: 4px solid transparent; transition: all 0.2s;
+        }
+        .kpi-card:hover { transform: translateY(-3px); }
+        .kpi-card.active { background-color: #eff6ff; border-color: var(--primary); transform: scale(1.02); }
+        .kpi-val { font-size: 2rem; font-weight: 800; line-height: 1; }
+        .kpi-lbl { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 5px; }
+
+        /* EVOLUTION DASHBOARD */
+        .evo-hero {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white; border-radius: 16px; padding: 30px; margin-bottom: 30px;
+            display: flex; justify-content: space-around; align-items: center; text-align: center;
+        }
+        .evo-stat-val { font-size: 2.5rem; font-weight: 800; color: #38bdf8; }
+        .evo-stat-lbl { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }
+        .evo-arrow { color: rgba(255,255,255,0.2); font-size: 2rem; }
+
+        .rank-card { background: white; border-radius: 12px; box-shadow: var(--card-shadow); height: 100%; overflow: hidden; }
+        .rank-header { background: #f8fafc; padding: 15px 20px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #334155; }
+        .rank-table th { background: #f1f5f9; font-size: 0.75rem; text-transform: uppercase; color: #64748b; }
+
+        /* GENERAL UTILS */
+        .badge-gain { background: rgba(16, 185, 129, 0.2); color: #4ade80; padding: 5px 15px; border-radius: 20px; font-weight: 700; font-size: 0.9rem; }
+        .table-custom thead th { background: #f8fafc; color: #64748b; text-transform: uppercase; font-size: 0.75rem; padding: 12px; }
+        
+        #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <div id="loading">
+        <div class="spinner-border text-primary mb-3" role="status"></div>
+        <h5 class="fw-bold">Processando...</h5>
+    </div>
+
+    <div class="container-fluid px-4 py-4">
+
+        <div class="hero-section">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-bold m-0"><i class="fas fa-layer-group text-primary me-2"></i>SLA Control Tower</h4>
+                    <small class="text-muted">Gestão de Performance e Evolução Diária</small>
+                </div>
+                <div class="d-flex gap-3">
+                    <div class="form-check form-switch bg-light px-3 py-2 rounded border">
+                        <input class="form-check-input" type="checkbox" id="toggleExcluirTriagem" onchange="recalculateAll()">
+                        <label class="form-check-label small fw-bold text-secondary" for="toggleExcluirTriagem">Ignorar Erro Triagem</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3 flex-wrap">
+                <div class="upload-btn" id="btn1" onclick="document.getElementById('file1').click()">
+                    <i class="fas fa-file-excel fa-2x text-secondary"></i>
+                    <div>
+                        <div class="fw-bold">1. Base SLA (Geral)</div>
+                        <small class="text-muted">Arquivo Principal</small>
+                    </div>
+                </div>
+                <input type="file" id="file1" hidden accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+
+                <div class="upload-btn" id="btn2" onclick="document.getElementById('file2').click()">
+                    <i class="fas fa-shipping-fast fa-2x text-secondary"></i>
+                    <div>
+                        <div class="fw-bold">2. Evolução (Entregues)</div>
+                        <small class="text-muted">Lista Baixada (Col E: Motorista)</small>
+                    </div>
+                </div>
+                <input type="file" id="file2" hidden accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs-custom" id="mainTabs">
+            <li class="nav-item">
+                <a class="nav-link active" id="tab-overview" href="#" onclick="switchTab('overview')">
+                    <i class="fas fa-chart-pie me-2"></i>Visão Geral
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link disabled" id="tab-evolution" href="#" onclick="switchTab('evolution')">
+                    <i class="fas fa-rocket me-2"></i>Análise de Evolução <span class="badge bg-primary ms-1" style="font-size:0.6rem">NEW</span>
+                </a>
+            </li>
+        </ul>
+
+        <div id="view-overview">
+            
+            <div class="d-flex gap-2 mb-3 align-items-center flex-wrap">
+                <select id="filterCity" class="form-select form-select-sm shadow-sm" style="width: 200px;" onchange="applyFilters()">
+                    <option value="all">Todas as Cidades</option>
+                </select>
+                <select id="filterDriver" class="form-select form-select-sm shadow-sm" style="width: 200px;" onchange="applyFilters()">
+                    <option value="all">Todos os Entregadores</option>
+                </select>
+                <button class="btn btn-sm btn-outline-danger shadow-sm ms-auto" id="btnLowSla" onclick="toggleLowSla()">
+                    <i class="fas fa-filter me-1"></i> SLA < 95%
+                </button>
+                <button class="btn btn-sm btn-light border shadow-sm" onclick="resetFilters()">Resetar</button>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card active" style="border-bottom-color: var(--primary);" id="kpi-total" onclick="setKpi('total')">
+                    <div class="kpi-lbl">Volume Total</div>
+                    <div class="kpi-val text-primary" id="val-total">0</div>
+                </div>
+                <div class="kpi-card" style="border-bottom-color: var(--success);" id="kpi-delivered" onclick="setKpi('delivered')">
+                    <div class="kpi-lbl">Entregues</div>
+                    <div class="kpi-val text-success" id="val-delivered">0</div>
+                    <small class="text-muted fw-bold" id="sla-main-display">SLA: 0%</small>
+                </div>
+                <div class="kpi-card" style="border-bottom-color: var(--info);" id="kpi-open" onclick="setKpi('open')">
+                    <div class="kpi-lbl">Em Aberto</div>
+                    <div class="kpi-val text-info" id="val-open">0</div>
+                </div>
+                <div class="kpi-card" style="border-bottom-color: var(--warning);" id="kpi-stopped" onclick="setKpi('stopped')">
+                    <div class="kpi-lbl">Parado Base</div>
+                    <div class="kpi-val text-warning" id="val-stopped">0</div>
+                </div>
+                <div class="kpi-card" style="border-bottom-color: var(--purple);" id="kpi-sorting" onclick="setKpi('sorting')">
+                    <div class="kpi-lbl">Erro Triagem</div>
+                    <div class="kpi-val" style="color:var(--purple)" id="val-sorting">0</div>
+                </div>
+                <div class="kpi-card" style="border-bottom-color: var(--danger);" id="kpi-problems" onclick="setKpi('problems')">
+                    <div class="kpi-lbl">Problemas</div>
+                    <div class="kpi-val text-danger" id="val-problems">0</div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold text-dark">Performance por Cidade</h6>
+                    <span class="badge bg-light text-dark border" id="city-count-badge">0</span>
+                </div>
+                <div class="table-responsive" style="max-height: 400px;">
+                    <table class="table table-custom table-hover mb-0">
+                        <thead class="sticky-top bg-white" style="top:0">
+                            <tr>
+                                <th>Cidade</th>
+                                <th class="text-center">Total</th>
+                                <th>SLA %</th>
+                                <th class="text-center text-success">Entregue</th>
+                                <th class="text-center text-info">Aberto</th>
+                                <th class="text-center text-warning">Parado</th>
+                                <th class="text-center text-danger">Prob</th>
+                                <th class="text-center" style="color:var(--purple)">Triagem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="city-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold text-dark" id="table-title">Registros Detalhados</h6>
+                    <button class="btn btn-primary btn-sm" onclick="copyData()"><i class="fas fa-copy me-2"></i>Copiar Lista</button>
+                </div>
+                <div class="table-responsive" style="max-height: 400px;">
+                    <table class="table table-sm table-striped align-middle mb-0">
+                        <thead class="table-dark sticky-top">
+                            <tr>
+                                <th>Remessa</th>
+                                <th>Status</th>
+                                <th>Cidade</th>
+                                <th>Problema</th>
+                                <th>Info</th>
+                            </tr>
+                        </thead>
+                        <tbody id="records-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="view-evolution" style="display: none;">
+            
+            <div class="evo-hero">
+                <div>
+                    <div class="evo-stat-lbl">SLA Original</div>
+                    <div class="evo-stat-val text-secondary" id="evo-sla-orig">0%</div>
+                </div>
+                <div class="evo-arrow"><i class="fas fa-arrow-right"></i></div>
+                <div>
+                    <div class="evo-stat-lbl">SLA Atualizado</div>
+                    <div class="evo-stat-val text-white" id="evo-sla-new">0%</div>
+                </div>
+                <div class="evo-arrow"><i class="fas fa-arrow-right"></i></div>
+                <div>
+                    <div class="evo-stat-lbl">Impacto Real</div>
+                    <div class="badge-gain" id="evo-sla-gain">+0%</div>
+                </div>
+                <div>
+                    <div class="evo-stat-lbl">Pacotes Recuperados</div>
+                    <div class="evo-stat-val text-info" id="evo-total-recov">0</div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="rank-card">
+                        <div class="rank-header text-primary"><i class="fas fa-user-shield me-2"></i>Top 5 Motoristas de Resgate</div>
+                        <div class="table-responsive">
+                            <table class="table table-hover rank-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Motorista (Baixa)</th>
+                                        <th class="text-center">Qtd Recuperada</th>
+                                        <th>Share</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rank-driver-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 mb-4">
+                    <div class="rank-card">
+                        <div class="rank-header text-success"><i class="fas fa-map-marked-alt me-2"></i>Top 5 Cidades Recuperadas</div>
+                        <div class="table-responsive">
+                            <table class="table table-hover rank-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Cidade</th>
+                                        <th class="text-center">Qtd Recuperada</th>
+                                        <th>Share</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rank-city-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="m-0 fw-bold text-dark">📦 Lista de Pacotes Recuperados</h6>
+                </div>
+                <div class="table-responsive" style="max-height: 400px;">
+                    <table class="table table-sm table-striped align-middle mb-0">
+                        <thead class="table-dark sticky-top">
+                            <tr>
+                                <th>Remessa</th>
+                                <th>Cidade</th>
+                                <th>Status Anterior</th>
+                                <th>Motorista Baixa</th>
+                            </tr>
+                        </thead>
+                        <tbody id="evo-list-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // GLOBAL STATE
+        let rawData = [];
+        let evolutionMap = new Map(); // Remessa -> Motorista
+        let filteredData = [];
+        
+        let isEvolutionActive = false;
+        let currentKpi = 'total';
+        let showLowSla = false;
+
+        // --- HANDLERS ---
+        document.getElementById('file1').addEventListener('change', (e) => handleFile(e, 1));
+        document.getElementById('file2').addEventListener('change', (e) => handleFile(e, 2));
+
+        function handleFile(e, type) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            document.getElementById('loading').style.display = 'flex';
+            const reader = new FileReader();
+            
+            reader.onload = (evt) => {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const wb = XLSX.read(data, {type:'array'});
+                    const sheet = wb.Sheets[wb.SheetNames[0]];
+
+                    if(type === 1) {
+                        rawData = XLSX.utils.sheet_to_json(sheet);
+                        document.getElementById('btn1').classList.add('loaded');
+                        initDropdowns();
+                        // Reset Evolução
+                        isEvolutionActive = false;
+                        evolutionMap.clear();
+                        toggleTabState(false);
+                        applyFilters();
+                    } else {
+                        const json = XLSX.utils.sheet_to_json(sheet, {header:1});
+                        evolutionMap.clear();
+                        // Col A (0) = Remessa, Col E (4) = Motorista
+                        json.forEach(row => {
+                            if(row && row.length > 0) {
+                                const rem = row[0] ? String(row[0]).trim() : null;
+                                const drv = (row.length > 4 && row[4]) ? String(row[4]).trim() : 'NÃO IDENTIFICADO';
+                                if(rem) evolutionMap.set(rem, drv);
+                            }
+                        });
+                        isEvolutionActive = true;
+                        document.getElementById('btn2').classList.add('loaded');
+                        toggleTabState(true);
+                        // Auto-switch to evolution tab for UX
+                        switchTab('evolution');
+                        applyFilters();
+                    }
+                    document.getElementById('loading').style.display = 'none';
+                } catch(err) {
+                    alert('Erro ao ler arquivo.');
+                    document.getElementById('loading').style.display = 'none';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // --- LOGIC ---
+        function getStatus(row) {
+            const remessa = String(row['Remessa'] || '').trim();
+            const statusOrig = row['Status'];
+            const prob = row['Tipo problemático'] ? String(row['Tipo problemático']).trim() : '';
+            const codeRaw = row['Código de dois segmentos'];
+            const code = (codeRaw === undefined || codeRaw === null) ? '' : String(codeRaw).trim();
+
+            let finalStatus = 'open';
+            let isRecovered = false;
+            let recoveredDriver = null;
+
+            // 1. Check Evolution
+            let effectiveStatus = statusOrig;
+            if (isEvolutionActive && evolutionMap.has(remessa)) {
+                if (statusOrig !== 'Pedido entregue') {
+                    isRecovered = true;
+                    recoveredDriver = evolutionMap.get(remessa);
+                }
+                effectiveStatus = 'Pedido entregue';
+            }
+
+            // 2. Classify
+            if (effectiveStatus === 'Pedido entregue') {
+                finalStatus = 'delivered';
+            }
+            // Regra Triagem (Code != 751-05 OR Envio.errado)
+            else if (code !== '751-05' || prob.includes('Envio.errado') || prob.includes('错发')) {
+                finalStatus = 'sorting';
+            }
+            else if (effectiveStatus === 'Parado em base') {
+                finalStatus = 'stopped';
+            }
+            else if (prob !== '') {
+                finalStatus = 'problems';
+            }
+            else {
+                finalStatus = 'open';
+            }
+
+            return { finalStatus, isRecovered, recoveredDriver, prob, code, statusOrig };
+        }
+
+        function applyFilters() {
+            const cVal = document.getElementById('filterCity').value;
+            const dVal = document.getElementById('filterDriver').value;
+            filteredData = rawData.filter(r => {
+                return (cVal === 'all' || r['Cidade Destino'] === cVal) &&
+                       (dVal === 'all' || r['Entregador'] === dVal);
+            });
+            recalculateAll();
+        }
+
+        function recalculateAll() {
+            const counts = { total:0, delivered:0, open:0, stopped:0, sorting:0, problems:0 };
+            const cityStats = {};
+            
+            // Evolution Data
+            let origDelivered = 0;
+            let recoveredCount = 0;
+            const rankCity = {};
+            const rankDriver = {};
+            const recoveredList = [];
+
+            filteredData.forEach(row => {
+                // Orig count
+                if(row['Status'] === 'Pedido entregue') origDelivered++;
+
+                const info = getStatus(row);
+                
+                counts.total++;
+                counts[info.finalStatus]++;
+
+                // City Stats
+                const city = row['Cidade Destino'] || 'N/A';
+                if(!cityStats[city]) cityStats[city] = { total:0, delivered:0, open:0, stopped:0, sorting:0, problems:0 };
+                cityStats[city].total++;
+                cityStats[city][info.finalStatus]++;
+
+                // Evolution Logic
+                if(info.isRecovered) {
+                    recoveredCount++;
+                    rankCity[city] = (rankCity[city] || 0) + 1;
+                    const drv = info.recoveredDriver || 'N/D';
+                    rankDriver[drv] = (rankDriver[drv] || 0) + 1;
+                    
+                    recoveredList.push({ ...row, ...info });
+                }
+            });
+
+            // UPDATE UI VIEW 1 (OVERVIEW)
+            updateOverview(counts, cityStats);
+            
+            // UPDATE UI VIEW 2 (EVOLUTION)
+            if(isEvolutionActive) {
+                updateEvolution(counts.total, origDelivered, counts.delivered, recoveredCount, rankCity, rankDriver, recoveredList);
+            }
+        }
+
+        function updateOverview(counts, cityStats) {
+            document.getElementById('val-total').innerText = counts.total;
+            document.getElementById('val-delivered').innerText = counts.delivered;
+            document.getElementById('val-open').innerText = counts.open;
+            document.getElementById('val-stopped').innerText = counts.stopped;
+            document.getElementById('val-sorting').innerText = counts.sorting;
+            document.getElementById('val-problems').innerText = counts.problems;
+
+            const ignore = document.getElementById('toggleExcluirTriagem').checked;
+            let den = counts.total;
+            if(ignore) den -= counts.sorting;
+            const sla = den > 0 ? (counts.delivered / den * 100) : 0;
+            document.getElementById('sla-main-display').innerText = `SLA: ${sla.toFixed(2)}%`;
+
+            renderCityTable(cityStats, ignore);
+            renderRecordsTable();
+        }
+
+        function updateEvolution(total, origDelivered, currDelivered, recovered, rankCity, rankDriver, list) {
+            const ignore = document.getElementById('toggleExcluirTriagem').checked; // Evolution follows main toggle? Assume yes for consistency or no? Let's assume Denom is Total for pure impact.
+            // But let's keep consistency.
+            // We don't have sorting count for original state precisely calculated here (optimization trade-off).
+            // Let's use Total as Denom for Evolution Impact to keep it simple and robust.
+            const den = total;
+            
+            const oldSla = den > 0 ? (origDelivered / den * 100) : 0;
+            const newSla = den > 0 ? (currDelivered / den * 100) : 0;
+            const gain = newSla - oldSla;
+
+            document.getElementById('evo-sla-orig').innerText = oldSla.toFixed(2) + '%';
+            document.getElementById('evo-sla-new').innerText = newSla.toFixed(2) + '%';
+            document.getElementById('evo-sla-gain').innerText = `+${gain.toFixed(2)}%`;
+            document.getElementById('evo-total-recov').innerText = recovered;
+
+            renderRankTable('rank-driver-tbody', rankDriver, recovered);
+            renderRankTable('rank-city-tbody', rankCity, recovered);
+            renderEvoList(list);
+        }
+
+        // --- RENDERERS ---
+        function renderCityTable(stats, ignore) {
+            const tbody = document.getElementById('city-tbody');
+            tbody.innerHTML = '';
+            const sorted = Object.entries(stats).sort((a,b) => b[1].total - a[1].total);
+            let c = 0;
+            sorted.forEach(([city, d]) => {
+                let den = d.total;
+                if(ignore) den -= d.sorting;
+                const sla = den > 0 ? (d.delivered / den * 100) : 0;
+                if(showLowSla && sla >= 95) return;
+                c++;
+                
+                let clr = sla >= 95 ? 'success' : (sla >= 70 ? 'warning' : 'danger');
+                let bar = sla >= 95 ? 'bg-success' : (sla >= 70 ? 'bg-warning' : 'bg-danger');
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">${city}</td>
+                        <td class="text-center">${d.total}</td>
+                        <td style="width:130px">
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1 me-2" style="height:6px"><div class="progress-bar ${bar}" style="width:${sla}%"></div></div>
+                                <span class="text-${clr} fw-bold small">${sla.toFixed(1)}%</span>
+                            </div>
+                        </td>
+                        <td class="text-center text-success fw-bold">${d.delivered}</td>
+                        <td class="text-center text-info fw-bold">${d.open}</td>
+                        <td class="text-center text-warning fw-bold">${d.stopped}</td>
+                        <td class="text-center text-danger fw-bold">${d.problems}</td>
+                        <td class="text-center fw-bold" style="color:var(--purple); background:#f3e8ff">${d.sorting}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('city-count-badge').innerText = c;
+        }
+
+        function renderRecordsTable() {
+            const tbody = document.getElementById('records-tbody');
+            tbody.innerHTML = '';
+            const list = filteredData.filter(r => {
+                const info = getStatus(r);
+                return currentKpi === 'total' ? true : info.finalStatus === currentKpi;
+            });
+            document.getElementById('table-title').innerText = `Registros: ${currentKpi.toUpperCase()}`;
+            
+            list.slice(0, 300).forEach(r => {
+                const info = getStatus(r);
+                const recBadge = info.isRecovered ? '<span class="badge bg-success ms-2">Recuperado</span>' : '';
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${r['Remessa']||''}</td>
+                        <td><span class="fw-bold text-${getColor(info.finalStatus)}">${info.finalStatus.toUpperCase()}</span>${recBadge}</td>
+                        <td>${r['Cidade Destino']||''}</td>
+                        <td class="text-danger small">${info.prob}</td>
+                        <td>${info.code}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderRankTable(elId, map, total) {
+            const tbody = document.getElementById(elId);
+            tbody.innerHTML = '';
+            const sorted = Object.entries(map).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            sorted.forEach(([k, v]) => {
+                const pct = total > 0 ? (v/total*100).toFixed(1) : 0;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">${k}</td>
+                        <td class="text-center fw-bold text-success">${v}</td>
+                        <td><small class="text-muted">${pct}%</small></td>
+                    </tr>
+                `;
+            });
+            if(sorted.length === 0) tbody.innerHTML = '<tr><td colspan="3" class="text-center small text-muted">Sem dados</td></tr>';
+        }
+
+        function renderEvoList(list) {
+            const tbody = document.getElementById('evo-list-tbody');
+            tbody.innerHTML = '';
+            list.slice(0, 200).forEach(r => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">${r['Remessa']}</td>
+                        <td>${r['Cidade Destino']}</td>
+                        <td class="text-danger">${r.statusOrig}</td>
+                        <td class="text-primary fw-bold">${r.recoveredDriver}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- UTILS ---
+        function switchTab(view) {
+            document.getElementById('view-overview').style.display = view === 'overview' ? 'block' : 'none';
+            document.getElementById('view-evolution').style.display = view === 'evolution' ? 'block' : 'none';
+            
+            document.getElementById('tab-overview').classList.toggle('active', view === 'overview');
+            document.getElementById('tab-evolution').classList.toggle('active', view === 'evolution');
+        }
+
+        function toggleTabState(enabled) {
+            const tab = document.getElementById('tab-evolution');
+            if(enabled) tab.classList.remove('disabled');
+            else tab.classList.add('disabled');
+        }
+
+        function initDropdowns() {
+            const cSel = document.getElementById('filterCity');
+            const dSel = document.getElementById('filterDriver');
+            const cities = [...new Set(rawData.map(r => r['Cidade Destino']).filter(Boolean))].sort();
+            const drivers = [...new Set(rawData.map(r => r['Entregador']).filter(Boolean))].sort();
+            cSel.innerHTML = '<option value="all">Todas as Cidades</option>';
+            dSel.innerHTML = '<option value="all">Todos os Entregadores</option>';
+            cities.forEach(c => cSel.innerHTML += `<option value="${c}">${c}</option>`);
+            drivers.forEach(d => dSel.innerHTML += `<option value="${d}">${d}</option>`);
+        }
+
+        function setKpi(cat) {
+            currentKpi = cat;
+            document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('active'));
+            document.getElementById('kpi-'+cat).classList.add('active');
+            renderRecordsTable();
+        }
+
+        function getColor(st) {
+            if(st==='delivered') return 'success';
+            if(st==='sorting') return 'dark';
+            if(st==='stopped') return 'warning';
+            if(st==='problems') return 'danger';
+            return 'info';
+        }
+
+        function toggleLowSla() {
+            showLowSla = !showLowSla;
+            const btn = document.getElementById('btnLowSla');
+            btn.classList.toggle('btn-outline-danger');
+            btn.classList.toggle('btn-danger');
+            recalculateAll();
+        }
+
+        function copyData() {
+            const list = filteredData.filter(r => {
+                const info = getStatus(r);
+                return currentKpi === 'total' ? true : info.finalStatus === currentKpi;
+            });
+            const txt = list.map(r => r['Remessa']).join('\n');
+            navigator.clipboard.writeText(txt).then(() => alert('Copiado!'));
+        }
+
+        function resetFilters() {
+            document.getElementById('filterCity').value = 'all';
+            document.getElementById('filterDriver').value = 'all';
+            showLowSla = false;
+            document.getElementById('btnLowSla').classList.remove('btn-danger');
+            document.getElementById('btnLowSla').classList.add('btn-outline-danger');
+            applyFilters();
+        }
+
+    </script>
+</body>
+</html>
