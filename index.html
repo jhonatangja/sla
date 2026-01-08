@@ -3,683 +3,568 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SLA Control Tower - Evolution Pro</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-
+    <title>Dashboard SLA 7.0 - Impacto Global</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --bg-body: #f8fafc;
-            --primary: #2563eb;
-            --primary-dark: #1e40af;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --dark: #0f172a;
-            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-
-        body {
-            background-color: var(--bg-body);
-            font-family: 'Inter', sans-serif;
-            color: #334155;
-            padding-bottom: 80px;
-        }
-
-        /* NAVIGATION TABS */
-        .nav-tabs-custom {
-            border-bottom: 2px solid #e2e8f0; margin-bottom: 20px;
-        }
-        .nav-tabs-custom .nav-link {
-            border: none; color: #64748b; font-weight: 600; padding: 15px 25px; font-size: 1rem;
-            border-bottom: 3px solid transparent; transition: all 0.2s;
-        }
-        .nav-tabs-custom .nav-link:hover { color: var(--primary); }
-        .nav-tabs-custom .nav-link.active {
-            color: var(--primary); border-bottom-color: var(--primary); background: transparent;
-        }
-        .nav-tabs-custom .nav-link.disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* HEADER */
-        .hero-section {
-            background: white; padding: 1.5rem; border-radius: 16px;
-            box-shadow: var(--card-shadow); margin-bottom: 20px;
-        }
-        .upload-btn {
-            border: 2px dashed #cbd5e1; background: #f8fafc; padding: 12px;
-            border-radius: 10px; cursor: pointer; transition: all 0.2s;
-            display: flex; align-items: center; gap: 10px; min-width: 220px;
-        }
-        .upload-btn:hover { border-color: var(--primary); background: #eff6ff; }
-        .upload-btn.loaded { border-color: var(--success); background: #f0fdf4; color: #15803d; }
-
-        /* KPI CARDS (OVERVIEW) */
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .kpi-card {
-            background: white; padding: 20px; border-radius: 12px; box-shadow: var(--card-shadow);
-            cursor: pointer; border-bottom: 4px solid transparent; transition: all 0.2s;
-        }
-        .kpi-card:hover { transform: translateY(-3px); }
-        .kpi-card.active { background-color: #eff6ff; border-color: var(--primary); transform: scale(1.02); }
-        .kpi-val { font-size: 2rem; font-weight: 800; line-height: 1; }
-        .kpi-lbl { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 5px; }
-
-        /* EVOLUTION DASHBOARD */
-        .evo-hero {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: white; border-radius: 16px; padding: 30px; margin-bottom: 30px;
-            display: flex; justify-content: space-around; align-items: center; text-align: center;
-        }
-        .evo-stat-val { font-size: 2.5rem; font-weight: 800; color: #38bdf8; }
-        .evo-stat-lbl { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }
-        .evo-arrow { color: rgba(255,255,255,0.2); font-size: 2rem; }
-
-        .rank-card { background: white; border-radius: 12px; box-shadow: var(--card-shadow); height: 100%; overflow: hidden; }
-        .rank-header { background: #f8fafc; padding: 15px 20px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #334155; }
-        .rank-table th { background: #f1f5f9; font-size: 0.75rem; text-transform: uppercase; color: #64748b; }
-
-        /* GENERAL UTILS */
-        .badge-gain { background: rgba(16, 185, 129, 0.2); color: #4ade80; padding: 5px 15px; border-radius: 20px; font-weight: 700; font-size: 0.9rem; }
-        .table-custom thead th { background: #f8fafc; color: #64748b; text-transform: uppercase; font-size: 0.75rem; padding: 12px; }
-        
-        #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem; -webkit-appearance: none; appearance: none; }
+        .clickable-card:hover { transform: translateY(-2px); cursor: pointer; filter: brightness(0.95); transition: all 0.2s; }
     </style>
 </head>
-<body>
+<body class="bg-slate-100 font-sans text-slate-800">
 
-    <div id="loading">
-        <div class="spinner-border text-primary mb-3" role="status"></div>
-        <h5 class="fw-bold">Processando...</h5>
+    <div id="modal-prazos" class="fixed inset-0 bg-black/60 z-[60] hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden flex flex-col max-h-[80vh]">
+            <div class="bg-blue-900 text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold"><i class="fas fa-calendar-check mr-2"></i> Tabela de Prazos (Col X)</h3>
+                <button onclick="toggleModal('modal-prazos')" class="hover:bg-blue-800 px-2 rounded"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="overflow-y-auto custom-scrollbar p-4">
+                <table class="w-full text-sm text-left border-collapse">
+                    <thead class="bg-gray-100 text-gray-600 sticky top-0">
+                        <tr>
+                            <th class="p-2 border-b">Cidade</th>
+                            <th class="p-2 border-b text-right">Prazo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="prazos-list-body" class="divide-y divide-gray-100 text-xs"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <div class="container-fluid px-4 py-4">
-
-        <div class="hero-section">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h4 class="fw-bold m-0"><i class="fas fa-layer-group text-primary me-2"></i>SLA Control Tower</h4>
-                    <small class="text-muted">Gestão de Performance e Evolução Diária</small>
-                </div>
-                <div class="d-flex gap-3">
-                    <div class="form-check form-switch bg-light px-3 py-2 rounded border">
-                        <input class="form-check-input" type="checkbox" id="toggleExcluirTriagem" onchange="recalculateAll()">
-                        <label class="form-check-label small fw-bold text-secondary" for="toggleExcluirTriagem">Ignorar Erro Triagem</label>
-                    </div>
-                </div>
+    <div id="modal-global-audit" class="fixed inset-0 bg-black/60 z-[60] hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden flex flex-col max-h-[80vh]">
+            <div id="modal-global-header" class="bg-gray-800 text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold text-lg"><span id="modal-global-title">Auditando Pacotes</span></h3>
+                <button onclick="toggleModal('modal-global-audit')" class="hover:bg-white/20 px-2 rounded"><i class="fas fa-times"></i></button>
             </div>
-
-            <div class="d-flex gap-3 flex-wrap">
-                <div class="upload-btn" id="btn1" onclick="document.getElementById('file1').click()">
-                    <i class="fas fa-file-excel fa-2x text-secondary"></i>
-                    <div>
-                        <div class="fw-bold">1. Base SLA (Geral)</div>
-                        <small class="text-muted">Arquivo Principal</small>
-                    </div>
-                </div>
-                <input type="file" id="file1" hidden accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
-
-                <div class="upload-btn" id="btn2" onclick="document.getElementById('file2').click()">
-                    <i class="fas fa-shipping-fast fa-2x text-secondary"></i>
-                    <div>
-                        <div class="fw-bold">2. Evolução (Entregues)</div>
-                        <small class="text-muted">Lista Baixada (Col E: Motorista)</small>
-                    </div>
-                </div>
-                <input type="file" id="file2" hidden accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
-            </div>
-        </div>
-
-        <ul class="nav nav-tabs-custom" id="mainTabs">
-            <li class="nav-item">
-                <a class="nav-link active" id="tab-overview" href="#" onclick="switchTab('overview')">
-                    <i class="fas fa-chart-pie me-2"></i>Visão Geral
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link disabled" id="tab-evolution" href="#" onclick="switchTab('evolution')">
-                    <i class="fas fa-rocket me-2"></i>Análise de Evolução <span class="badge bg-primary ms-1" style="font-size:0.6rem">NEW</span>
-                </a>
-            </li>
-        </ul>
-
-        <div id="view-overview">
-            
-            <div class="d-flex gap-2 mb-3 align-items-center flex-wrap">
-                <select id="filterCity" class="form-select form-select-sm shadow-sm" style="width: 200px;" onchange="applyFilters()">
-                    <option value="all">Todas as Cidades</option>
-                </select>
-                <select id="filterDriver" class="form-select form-select-sm shadow-sm" style="width: 200px;" onchange="applyFilters()">
-                    <option value="all">Todos os Entregadores</option>
-                </select>
-                <button class="btn btn-sm btn-outline-danger shadow-sm ms-auto" id="btnLowSla" onclick="toggleLowSla()">
-                    <i class="fas fa-filter me-1"></i> SLA < 95%
+            <div class="p-2 bg-gray-50 border-b flex justify-between items-center">
+                <p class="text-xs text-gray-500">Total na lista: <span id="modal-global-count" class="font-bold text-gray-800">0</span></p>
+                <button onclick="copyGlobalCodes()" class="bg-gray-800 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-gray-700">
+                    <i class="fas fa-copy mr-1"></i> Copiar Códigos
                 </button>
-                <button class="btn btn-sm btn-light border shadow-sm" onclick="resetFilters()">Resetar</button>
             </div>
-
-            <div class="kpi-grid">
-                <div class="kpi-card active" style="border-bottom-color: var(--primary);" id="kpi-total" onclick="setKpi('total')">
-                    <div class="kpi-lbl">Volume Total</div>
-                    <div class="kpi-val text-primary" id="val-total">0</div>
-                </div>
-                <div class="kpi-card" style="border-bottom-color: var(--success);" id="kpi-delivered" onclick="setKpi('delivered')">
-                    <div class="kpi-lbl">Entregues</div>
-                    <div class="kpi-val text-success" id="val-delivered">0</div>
-                    <small class="text-muted fw-bold" id="sla-main-display">SLA: 0%</small>
-                </div>
-                <div class="kpi-card" style="border-bottom-color: var(--info);" id="kpi-open" onclick="setKpi('open')">
-                    <div class="kpi-lbl">Em Aberto</div>
-                    <div class="kpi-val text-info" id="val-open">0</div>
-                </div>
-                <div class="kpi-card" style="border-bottom-color: var(--warning);" id="kpi-stopped" onclick="setKpi('stopped')">
-                    <div class="kpi-lbl">Parado Base</div>
-                    <div class="kpi-val text-warning" id="val-stopped">0</div>
-                </div>
-                <div class="kpi-card" style="border-bottom-color: var(--purple);" id="kpi-sorting" onclick="setKpi('sorting')">
-                    <div class="kpi-lbl">Erro Triagem</div>
-                    <div class="kpi-val" style="color:var(--purple)" id="val-sorting">0</div>
-                </div>
-                <div class="kpi-card" style="border-bottom-color: var(--danger);" id="kpi-problems" onclick="setKpi('problems')">
-                    <div class="kpi-lbl">Problemas</div>
-                    <div class="kpi-val text-danger" id="val-problems">0</div>
-                </div>
+            <div class="overflow-y-auto custom-scrollbar flex-1 p-0">
+                <table class="w-full text-xs text-left">
+                    <thead class="bg-gray-100 text-gray-600 sticky top-0 shadow-sm">
+                        <tr>
+                            <th class="px-4 py-2">Código</th>
+                            <th class="px-4 py-2">Cidade</th>
+                            <th class="px-4 py-2">Motorista</th>
+                            <th class="px-4 py-2">Problema/Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-global-body" class="divide-y divide-gray-100"></tbody>
+                </table>
             </div>
-
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 fw-bold text-dark">Performance por Cidade</h6>
-                    <span class="badge bg-light text-dark border" id="city-count-badge">0</span>
-                </div>
-                <div class="table-responsive" style="max-height: 400px;">
-                    <table class="table table-custom table-hover mb-0">
-                        <thead class="sticky-top bg-white" style="top:0">
-                            <tr>
-                                <th>Cidade</th>
-                                <th class="text-center">Total</th>
-                                <th>SLA %</th>
-                                <th class="text-center text-success">Entregue</th>
-                                <th class="text-center text-info">Aberto</th>
-                                <th class="text-center text-warning">Parado</th>
-                                <th class="text-center text-danger">Prob</th>
-                                <th class="text-center" style="color:var(--purple)">Triagem</th>
-                            </tr>
-                        </thead>
-                        <tbody id="city-tbody"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 fw-bold text-dark" id="table-title">Registros Detalhados</h6>
-                    <button class="btn btn-primary btn-sm" onclick="copyData()"><i class="fas fa-copy me-2"></i>Copiar Lista</button>
-                </div>
-                <div class="table-responsive" style="max-height: 400px;">
-                    <table class="table table-sm table-striped align-middle mb-0">
-                        <thead class="table-dark sticky-top">
-                            <tr>
-                                <th>Remessa</th>
-                                <th>Status</th>
-                                <th>Cidade</th>
-                                <th>Problema</th>
-                                <th>Info</th>
-                            </tr>
-                        </thead>
-                        <tbody id="records-tbody"></tbody>
-                    </table>
-                </div>
-            </div>
-
         </div>
+    </div>
 
-        <div id="view-evolution" style="display: none;">
+    <header class="bg-slate-900 text-white p-4 shadow-xl sticky top-0 z-50">
+        <div class="container mx-auto flex flex-col xl:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="bg-white/10 p-2 rounded-lg">
+                    <i class="fas fa-chart-line text-2xl text-yellow-400"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight uppercase">SLA Intelligence</h1>
+                    <p class="text-gray-400 text-xs">Análise de Impacto & Performance</p>
+                </div>
+            </div>
             
-            <div class="evo-hero">
-                <div>
-                    <div class="evo-stat-lbl">SLA Original</div>
-                    <div class="evo-stat-val text-secondary" id="evo-sla-orig">0%</div>
+            <div class="flex flex-col md:flex-row gap-2 w-full xl:w-auto items-center">
+                <button onclick="toggleModal('modal-prazos')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition shadow-lg w-full md:w-auto">
+                    <i class="fas fa-calendar-alt mr-2"></i> Prazos
+                </button>
+
+                <div class="relative w-full md:w-40">
+                    <select id="filterCity" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500 cursor-pointer font-medium">
+                        <option value="">Todas as Cidades</option>
+                    </select>
                 </div>
-                <div class="evo-arrow"><i class="fas fa-arrow-right"></i></div>
-                <div>
-                    <div class="evo-stat-lbl">SLA Atualizado</div>
-                    <div class="evo-stat-val text-white" id="evo-sla-new">0%</div>
+
+                <div class="relative w-full md:w-40">
+                    <select id="filterDriver" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500 cursor-pointer font-medium">
+                        <option value="">Todos Motoristas</option>
+                    </select>
                 </div>
-                <div class="evo-arrow"><i class="fas fa-arrow-right"></i></div>
-                <div>
-                    <div class="evo-stat-lbl">Impacto Real</div>
-                    <div class="badge-gain" id="evo-sla-gain">+0%</div>
+
+                <label class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-lg cursor-pointer text-sm font-bold transition shadow-lg flex items-center justify-center w-full md:w-auto whitespace-nowrap">
+                    <i class="fas fa-file-excel mr-2"></i> Upload
+                    <input type="file" id="fileUpload" accept=".xlsx, .xls" class="hidden"/>
+                </label>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto p-4 space-y-6 pb-20">
+        
+        <div id="loading" class="hidden py-16 text-center">
+            <i class="fas fa-circle-notch fa-spin text-5xl text-blue-600"></i>
+            <p class="mt-4 text-gray-500 font-medium text-lg animate-pulse">Calculando impactos no SLA Global...</p>
+        </div>
+
+        <div id="dashboard" class="hidden space-y-8">
+
+            <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-gray-600">
+                    <p class="text-[10px] text-gray-500 font-bold uppercase">Total Pacotes</p>
+                    <h3 class="text-2xl font-black text-gray-800 mt-1" id="kpi-total">0</h3>
                 </div>
-                <div>
-                    <div class="evo-stat-lbl">Pacotes Recuperados</div>
-                    <div class="evo-stat-val text-info" id="evo-total-recov">0</div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-indigo-500 relative overflow-hidden">
+                    <div class="absolute right-0 top-0 p-2 text-indigo-100 text-4xl opacity-20"><i class="fas fa-percent"></i></div>
+                    <p class="text-[10px] text-indigo-600 font-bold uppercase">SLA GLOBAL</p>
+                    <h3 class="text-2xl font-black text-indigo-600 mt-1" id="kpi-sla">0.0%</h3>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-emerald-500">
+                    <p class="text-[10px] text-emerald-600 font-bold uppercase">Entregues</p>
+                    <h3 class="text-2xl font-black text-emerald-600 mt-1" id="kpi-entregue">0</h3>
+                </div>
+                <div onclick="openGlobalPacketList('problem')" class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-red-500 clickable-card group relative">
+                    <div class="absolute top-2 right-2 text-red-200 group-hover:text-red-500 transition"><i class="fas fa-external-link-alt text-xs"></i></div>
+                    <p class="text-[10px] text-red-500 font-bold uppercase group-hover:underline">Problemáticos</p>
+                    <h3 class="text-2xl font-black text-red-500 mt-1" id="kpi-problema">0</h3>
+                </div>
+                <div onclick="openGlobalPacketList('open')" class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-blue-400 clickable-card group relative">
+                    <div class="absolute top-2 right-2 text-blue-200 group-hover:text-blue-500 transition"><i class="fas fa-external-link-alt text-xs"></i></div>
+                    <p class="text-[10px] text-blue-500 font-bold uppercase group-hover:underline">Em Aberto</p>
+                    <h3 class="text-2xl font-black text-blue-500 mt-1" id="kpi-aberto">0</h3>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-orange-400">
+                    <p class="text-[10px] text-orange-500 font-bold uppercase">Erro Triagem</p>
+                    <h3 class="text-2xl font-black text-orange-500 mt-1" id="kpi-triagem">0</h3>
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-lg-6 mb-4">
-                    <div class="rank-card">
-                        <div class="rank-header text-primary"><i class="fas fa-user-shield me-2"></i>Top 5 Motoristas de Resgate</div>
-                        <div class="table-responsive">
-                            <table class="table table-hover rank-table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Motorista (Baixa)</th>
-                                        <th class="text-center">Qtd Recuperada</th>
-                                        <th>Share</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="rank-driver-tbody"></tbody>
-                            </table>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[420px]">
+                
+                <div class="bg-white rounded-xl shadow-sm border border-emerald-100 flex flex-col h-full overflow-hidden">
+                    <div class="bg-gradient-to-r from-emerald-600 to-emerald-500 p-3 flex justify-between items-center text-white shrink-0">
+                        <span class="font-bold flex items-center text-xs uppercase"><i class="fas fa-medal mr-2"></i> Alta Performance</span>
+                    </div>
+                    <div class="grid grid-cols-12 gap-1 px-3 py-2 bg-emerald-50 text-[9px] uppercase font-bold text-emerald-800 border-b shrink-0">
+                        <div class="col-span-5">Cidade</div>
+                        <div class="col-span-3 text-right">Vol</div>
+                        <div class="col-span-4 text-right">SLA%</div>
+                    </div>
+                    <div id="best-list" class="overflow-y-auto custom-scrollbar flex-1 p-2 space-y-1"></div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-orange-100 flex flex-col h-full overflow-hidden">
+                    <div class="bg-gradient-to-r from-orange-500 to-orange-400 p-3 flex justify-between items-center text-white shrink-0">
+                        <span class="font-bold flex items-center text-xs uppercase"><i class="fas fa-thumbs-down mr-2"></i> Pior SLA (%)</span>
+                    </div>
+                    <div class="grid grid-cols-12 gap-1 px-3 py-2 bg-orange-50 text-[9px] uppercase font-bold text-orange-800 border-b shrink-0">
+                        <div class="col-span-5">Cidade</div>
+                        <div class="col-span-3 text-right">Vol</div>
+                        <div class="col-span-4 text-right">SLA%</div>
+                    </div>
+                    <div id="worst-list" class="overflow-y-auto custom-scrollbar flex-1 p-2 space-y-1"></div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md border-2 border-red-500 flex flex-col h-full overflow-hidden relative">
+                    <div class="absolute top-0 right-0 bg-red-600 text-white text-[9px] px-2 py-0.5 rounded-bl font-bold">Foco Aqui</div>
+                    <div class="bg-gray-800 p-3 flex justify-between items-center text-white shrink-0">
+                        <span class="font-bold flex items-center text-xs uppercase text-red-400"><i class="fas fa-bomb mr-2"></i> Ofensores (Impacto)</span>
+                    </div>
+                    <div class="grid grid-cols-12 gap-1 px-3 py-2 bg-gray-100 text-[9px] uppercase font-bold text-gray-600 border-b shrink-0">
+                        <div class="col-span-5">Cidade</div>
+                        <div class="col-span-3 text-right">Falhas</div>
+                        <div class="col-span-4 text-right text-red-600">Impacto Global</div>
+                    </div>
+                    <div id="impact-list" class="overflow-y-auto custom-scrollbar flex-1 p-2 space-y-1 bg-gray-50"></div>
+                </div>
+
+            </div>
+
+            <div id="city-details-panel" class="hidden space-y-6 animate-fade-in-up">
+                
+                <div class="bg-white border border-indigo-100 rounded-xl shadow-md overflow-hidden">
+                    <div class="bg-indigo-600 p-4 text-white flex justify-between items-center">
+                        <h3 class="font-bold text-lg"><i class="fas fa-id-card-clip mr-2"></i> Top 10 Motoristas Críticos</h3>
+                        <div class="text-xs bg-indigo-800 px-3 py-1 rounded-full font-semibold border border-indigo-400">
+                            <span id="detail-city-name"></span>
                         </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-indigo-50 text-indigo-900 text-xs uppercase font-bold">
+                                <tr>
+                                    <th class="px-6 py-3">Entregador</th>
+                                    <th class="px-4 py-3 text-right">Volume</th>
+                                    <th class="px-4 py-3 text-right text-emerald-600">Entregue</th>
+                                    <th class="px-4 py-3 text-right text-red-500">Problema</th>
+                                    <th class="px-4 py-3 text-right text-blue-500">Aberto</th>
+                                    <th class="px-6 py-3 text-right">SLA %</th>
+                                </tr>
+                            </thead>
+                            <tbody id="driver-rank-list" class="divide-y divide-gray-100 bg-white"></tbody>
+                        </table>
                     </div>
                 </div>
 
-                <div class="col-lg-6 mb-4">
-                    <div class="rank-card">
-                        <div class="rank-header text-success"><i class="fas fa-map-marked-alt me-2"></i>Top 5 Cidades Recuperadas</div>
-                        <div class="table-responsive">
-                            <table class="table table-hover rank-table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Cidade</th>
-                                        <th class="text-center">Qtd Recuperada</th>
-                                        <th>Share</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="rank-city-tbody"></tbody>
-                            </table>
+                <div class="bg-white border border-gray-200 rounded-xl shadow-md flex flex-col h-[500px]">
+                    <div class="p-4 border-b bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div>
+                            <h3 class="font-bold text-gray-800 text-lg"><i class="fas fa-search mr-2 text-orange-500"></i> Auditoria de Pendências</h3>
+                            <p class="text-xs text-gray-500">Listagem de pacotes não entregues</p>
                         </div>
+                        <div class="flex gap-2">
+                            <button onclick="filterPackets('all')" id="btn-pkt-all" class="px-3 py-1 text-xs font-bold rounded shadow bg-white border">Todos (<span id="count-all">0</span>)</button>
+                            <button onclick="filterPackets('problem')" id="btn-pkt-prob" class="px-3 py-1 text-xs font-bold rounded hover:bg-white text-red-600">Problemáticos (<span id="count-prob">0</span>)</button>
+                            <button onclick="filterPackets('open')" id="btn-pkt-open" class="px-3 py-1 text-xs font-bold rounded hover:bg-white text-blue-600">Em Aberto (<span id="count-open">0</span>)</button>
+                        </div>
+                        <button onclick="copyTableCodes()" class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded text-xs font-bold transition flex items-center">
+                            <i class="fas fa-copy mr-2"></i> Copiar
+                        </button>
+                    </div>
+                    <div class="overflow-auto flex-1 custom-scrollbar">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-gray-100 text-gray-600 uppercase font-bold sticky top-0">
+                                <tr>
+                                    <th class="px-4 py-2">Código</th>
+                                    <th class="px-4 py-2">Motorista</th>
+                                    <th class="px-4 py-2">Motivo / Status</th>
+                                    <th class="px-4 py-2 text-center">Tipo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="packet-list-body" class="divide-y divide-gray-100"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h6 class="m-0 fw-bold text-dark">📦 Lista de Pacotes Recuperados</h6>
-                </div>
-                <div class="table-responsive" style="max-height: 400px;">
-                    <table class="table table-sm table-striped align-middle mb-0">
-                        <thead class="table-dark sticky-top">
+            <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+                <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center"><i class="fas fa-table mr-2 text-gray-400"></i> Visão Geral por Praça</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-slate-50 text-gray-600 uppercase text-[10px] font-bold border-b">
                             <tr>
-                                <th>Remessa</th>
-                                <th>Cidade</th>
-                                <th>Status Anterior</th>
-                                <th>Motorista Baixa</th>
+                                <th class="px-6 py-3">Cidade</th>
+                                <th class="px-4 py-3 text-right">Volume</th>
+                                <th class="px-4 py-3 text-right text-emerald-600">Entregue</th>
+                                <th class="px-4 py-3 text-right text-red-500">Problema</th>
+                                <th class="px-4 py-3 text-right text-blue-500">Aberto</th>
+                                <th class="px-6 py-3 text-right">SLA %</th>
                             </tr>
                         </thead>
-                        <tbody id="evo-list-tbody"></tbody>
+                        <tbody id="main-table" class="divide-y divide-gray-100"></tbody>
                     </table>
                 </div>
             </div>
 
         </div>
-
     </div>
 
     <script>
-        // GLOBAL STATE
-        let rawData = [];
-        let evolutionMap = new Map(); // Remessa -> Motorista
-        let filteredData = [];
-        
-        let isEvolutionActive = false;
-        let currentKpi = 'total';
-        let showLowSla = false;
+        const RAW_WHITELIST = [
+            "Rio Verde", "Jataí", "Mineiros", "Quirinópolis", "Santa Helena de Goiás", 
+            "Acreúna", "Santa Rita do Araguaia", "São Simão", "Serranópolis", "Cachoeira Alta", 
+            "Montividiu", "Maurilândia", "Itarumã", "Inaciolândia", "Paranaiguara", "Aporé", 
+            "Santo Antônio da Barra", "Itajá", "Caçu", "Porteirão", "Perolândia", 
+            "Aparecida do Rio Doce", "Turvelândia", "Castelândia", "Portelândia", 
+            "Gouvelândia", "Lagoa Santa", "Itaruma", "Jatai"
+        ];
+        const WHITELIST = RAW_WHITELIST.map(c => normalizeStr(c));
 
-        // --- HANDLERS ---
-        document.getElementById('file1').addEventListener('change', (e) => handleFile(e, 1));
-        document.getElementById('file2').addEventListener('change', (e) => handleFile(e, 2));
+        let globalPackets = [];
+        let filteredPackets = []; 
+        let cityDeadlines = {};
+        let grandTotalBase = 0; // Para cálculo do impacto
 
-        function handleFile(e, type) {
+        document.getElementById('fileUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
-            if (!file) return;
+            if(!file) return;
 
-            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+
             const reader = new FileReader();
-            
-            reader.onload = (evt) => {
-                try {
-                    const data = new Uint8Array(evt.target.result);
-                    const wb = XLSX.read(data, {type:'array'});
-                    const sheet = wb.Sheets[wb.SheetNames[0]];
-
-                    if(type === 1) {
-                        rawData = XLSX.utils.sheet_to_json(sheet);
-                        document.getElementById('btn1').classList.add('loaded');
-                        initDropdowns();
-                        // Reset Evolução
-                        isEvolutionActive = false;
-                        evolutionMap.clear();
-                        toggleTabState(false);
-                        applyFilters();
-                    } else {
-                        const json = XLSX.utils.sheet_to_json(sheet, {header:1});
-                        evolutionMap.clear();
-                        // Col A (0) = Remessa, Col E (4) = Motorista
-                        json.forEach(row => {
-                            if(row && row.length > 0) {
-                                const rem = row[0] ? String(row[0]).trim() : null;
-                                const drv = (row.length > 4 && row[4]) ? String(row[4]).trim() : 'NÃO IDENTIFICADO';
-                                if(rem) evolutionMap.set(rem, drv);
-                            }
-                        });
-                        isEvolutionActive = true;
-                        document.getElementById('btn2').classList.add('loaded');
-                        toggleTabState(true);
-                        // Auto-switch to evolution tab for UX
-                        switchTab('evolution');
-                        applyFilters();
-                    }
-                    document.getElementById('loading').style.display = 'none';
-                } catch(err) {
-                    alert('Erro ao ler arquivo.');
-                    document.getElementById('loading').style.display = 'none';
-                }
+            reader.onload = function(evt) {
+                const workbook = XLSX.read(evt.target.result, { type: 'binary' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(sheet, { header: "A", defval: "" });
+                setTimeout(() => processData(json), 100);
             };
-            reader.readAsArrayBuffer(file);
+            reader.readAsBinaryString(file);
+        });
+
+        document.getElementById('filterCity').addEventListener('change', updateDashboard);
+        document.getElementById('filterDriver').addEventListener('change', updateDashboard);
+
+        function normalizeStr(str) {
+            return String(str).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
         }
 
-        // --- LOGIC ---
-        function getStatus(row) {
-            const remessa = String(row['Remessa'] || '').trim();
-            const statusOrig = row['Status'];
-            const prob = row['Tipo problemático'] ? String(row['Tipo problemático']).trim() : '';
-            const codeRaw = row['Código de dois segmentos'];
-            const code = (codeRaw === undefined || codeRaw === null) ? '' : String(codeRaw).trim();
+        function processData(rows) {
+            globalPackets = [];
+            cityDeadlines = {};
+            const dataRows = rows.slice(1);
 
-            let finalStatus = 'open';
-            let isRecovered = false;
-            let recoveredDriver = null;
+            dataRows.forEach(row => {
+                const cityRaw = String(row.AD || "NÃO IDENTIFICADO").trim();
+                const cityNorm = normalizeStr(cityRaw);
+                const isTriagem = !WHITELIST.includes(cityNorm);
+                const statusT = String(row.T || "").trim().toUpperCase();
+                const problemS = String(row.S || "").trim();
+                const prazoX = String(row.X || "").trim();
 
-            // 1. Check Evolution
-            let effectiveStatus = statusOrig;
-            if (isEvolutionActive && evolutionMap.has(remessa)) {
-                if (statusOrig !== 'Pedido entregue') {
-                    isRecovered = true;
-                    recoveredDriver = evolutionMap.get(remessa);
-                }
-                effectiveStatus = 'Pedido entregue';
-            }
+                if (!isTriagem && prazoX && !cityDeadlines[cityRaw]) cityDeadlines[cityRaw] = prazoX;
 
-            // 2. Classify
-            if (effectiveStatus === 'Pedido entregue') {
-                finalStatus = 'delivered';
-            }
-            // Regra Triagem (Code != 751-05 OR Envio.errado)
-            else if (code !== '751-05' || prob.includes('Envio.errado') || prob.includes('错发')) {
-                finalStatus = 'sorting';
-            }
-            else if (effectiveStatus === 'Parado em base') {
-                finalStatus = 'stopped';
-            }
-            else if (prob !== '') {
-                finalStatus = 'problems';
-            }
-            else {
-                finalStatus = 'open';
-            }
-
-            return { finalStatus, isRecovered, recoveredDriver, prob, code, statusOrig };
-        }
-
-        function applyFilters() {
-            const cVal = document.getElementById('filterCity').value;
-            const dVal = document.getElementById('filterDriver').value;
-            filteredData = rawData.filter(r => {
-                return (cVal === 'all' || r['Cidade Destino'] === cVal) &&
-                       (dVal === 'all' || r['Entregador'] === dVal);
+                globalPackets.push({
+                    id: row.A, city: cityRaw, cityNorm: cityNorm, driver: String(row.P || "SEM MOTORISTA").toUpperCase().trim(),
+                    isEntregue: (statusT === 'Y'), hasProblem: (statusT !== 'Y' && problemS !== ""), isOpen: (statusT !== 'Y' && problemS === ""),
+                    problemDesc: problemS, isTriagem: isTriagem
+                });
             });
-            recalculateAll();
+
+            populateFilters();
+            renderPrazosTable();
+            updateDashboard();
+            
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
         }
 
-        function recalculateAll() {
-            const counts = { total:0, delivered:0, open:0, stopped:0, sorting:0, problems:0 };
+        function populateFilters() {
+            const cities = [...new Set(globalPackets.map(p => p.city).filter(c => c))].sort();
+            const drivers = [...new Set(globalPackets.map(p => p.driver).filter(d => d))].sort();
+            const selCity = document.getElementById('filterCity');
+            const selDriver = document.getElementById('filterDriver');
+
+            selCity.innerHTML = '<option value="">Todas as Cidades</option>';
+            selDriver.innerHTML = '<option value="">Todos Motoristas</option>';
+
+            cities.forEach(c => {
+                const label = !WHITELIST.includes(normalizeStr(c)) ? `${c} (Triagem)` : c;
+                selCity.innerHTML += `<option value="${normalizeStr(c)}">${label}</option>`;
+            });
+            drivers.forEach(d => selDriver.innerHTML += `<option value="${d}">${d}</option>`);
+        }
+
+        function renderPrazosTable() {
+            const tbody = document.getElementById('prazos-list-body');
+            tbody.innerHTML = '';
+            RAW_WHITELIST.sort().forEach(city => {
+                let prazo = "-";
+                const cityNorm = normalizeStr(city);
+                const foundKey = Object.keys(cityDeadlines).find(k => normalizeStr(k) === cityNorm);
+                if(foundKey) prazo = cityDeadlines[foundKey];
+                tbody.innerHTML += `<tr><td class="p-2 border-b font-medium">${city}</td><td class="p-2 border-b text-right text-gray-500">${prazo}</td></tr>`;
+            });
+        }
+
+        function updateDashboard() {
+            const selectedCityNorm = document.getElementById('filterCity').value;
+            const selectedDriver = document.getElementById('filterDriver').value;
+
+            // Filtro
+            let currentData = globalPackets.filter(p => {
+                let matchCity = selectedCityNorm === "" || p.cityNorm === selectedCityNorm;
+                let matchDriver = selectedDriver === "" || p.driver === selectedDriver;
+                return matchCity && matchDriver;
+            });
+
+            // Definir Base Total para cálculo de impacto
+            // Se não tiver filtro, a base é o total geral da leitura atual
+            grandTotalBase = currentData.length;
+
+            updateKPICards(currentData);
+
+            // Stats
             const cityStats = {};
-            
-            // Evolution Data
-            let origDelivered = 0;
-            let recoveredCount = 0;
-            const rankCity = {};
-            const rankDriver = {};
-            const recoveredList = [];
-
-            filteredData.forEach(row => {
-                // Orig count
-                if(row['Status'] === 'Pedido entregue') origDelivered++;
-
-                const info = getStatus(row);
-                
-                counts.total++;
-                counts[info.finalStatus]++;
-
-                // City Stats
-                const city = row['Cidade Destino'] || 'N/A';
-                if(!cityStats[city]) cityStats[city] = { total:0, delivered:0, open:0, stopped:0, sorting:0, problems:0 };
-                cityStats[city].total++;
-                cityStats[city][info.finalStatus]++;
-
-                // Evolution Logic
-                if(info.isRecovered) {
-                    recoveredCount++;
-                    rankCity[city] = (rankCity[city] || 0) + 1;
-                    const drv = info.recoveredDriver || 'N/D';
-                    rankDriver[drv] = (rankDriver[drv] || 0) + 1;
-                    
-                    recoveredList.push({ ...row, ...info });
-                }
+            currentData.forEach(p => {
+                if(!cityStats[p.city]) cityStats[p.city] = { name: p.city, total: 0, ent: 0, prob: 0, open: 0, isTriagem: p.isTriagem };
+                const s = cityStats[p.city];
+                s.total++;
+                if(p.isEntregue) s.ent++;
+                else if(p.hasProblem) s.prob++;
+                else s.open++;
             });
 
-            // UPDATE UI VIEW 1 (OVERVIEW)
-            updateOverview(counts, cityStats);
-            
-            // UPDATE UI VIEW 2 (EVOLUTION)
-            if(isEvolutionActive) {
-                updateEvolution(counts.total, origDelivered, counts.delivered, recoveredCount, rankCity, rankDriver, recoveredList);
+            const cityArray = Object.values(cityStats).map(c => {
+                c.sla = c.total > 0 ? ((c.ent / c.total) * 100).toFixed(1) : 0;
+                // CÁLCULO DE IMPACTO GLOBAL: (Falhas da Cidade / Total Geral Filtrado)
+                // Falhas = Problema + Aberto (ou seja, Total - Entregue)
+                const failures = c.total - c.ent;
+                c.globalImpact = grandTotalBase > 0 ? ((failures / grandTotalBase) * 100).toFixed(2) : 0;
+                return c;
+            });
+
+            renderCityRankings(cityArray);
+            renderMainTable(cityArray);
+
+            const detailsPanel = document.getElementById('city-details-panel');
+            if (selectedCityNorm !== "") {
+                detailsPanel.classList.remove('hidden');
+                document.getElementById('detail-city-name').innerText = document.getElementById('filterCity').options[document.getElementById('filterCity').selectedIndex].text;
+                renderDriverAnalysis(currentData);
+                renderPacketAudit(currentData);
+            } else {
+                detailsPanel.classList.add('hidden');
             }
         }
 
-        function updateOverview(counts, cityStats) {
-            document.getElementById('val-total').innerText = counts.total;
-            document.getElementById('val-delivered').innerText = counts.delivered;
-            document.getElementById('val-open').innerText = counts.open;
-            document.getElementById('val-stopped').innerText = counts.stopped;
-            document.getElementById('val-sorting').innerText = counts.sorting;
-            document.getElementById('val-problems').innerText = counts.problems;
-
-            const ignore = document.getElementById('toggleExcluirTriagem').checked;
-            let den = counts.total;
-            if(ignore) den -= counts.sorting;
-            const sla = den > 0 ? (counts.delivered / den * 100) : 0;
-            document.getElementById('sla-main-display').innerText = `SLA: ${sla.toFixed(2)}%`;
-
-            renderCityTable(cityStats, ignore);
-            renderRecordsTable();
+        function updateKPICards(data) {
+            const total = data.length;
+            const entregue = data.filter(p => p.isEntregue).length;
+            const slaGlobal = total > 0 ? ((entregue / total) * 100).toFixed(1) + '%' : "0.0%";
+            document.getElementById('kpi-total').innerText = total;
+            document.getElementById('kpi-sla').innerText = slaGlobal;
+            document.getElementById('kpi-entregue').innerText = entregue;
+            document.getElementById('kpi-problema').innerText = data.filter(p => p.hasProblem).length;
+            document.getElementById('kpi-aberto').innerText = data.filter(p => p.isOpen).length;
+            document.getElementById('kpi-triagem').innerText = data.filter(p => p.isTriagem).length;
         }
 
-        function updateEvolution(total, origDelivered, currDelivered, recovered, rankCity, rankDriver, list) {
-            const ignore = document.getElementById('toggleExcluirTriagem').checked; // Evolution follows main toggle? Assume yes for consistency or no? Let's assume Denom is Total for pure impact.
-            // But let's keep consistency.
-            // We don't have sorting count for original state precisely calculated here (optimization trade-off).
-            // Let's use Total as Denom for Evolution Impact to keep it simple and robust.
-            const den = total;
-            
-            const oldSla = den > 0 ? (origDelivered / den * 100) : 0;
-            const newSla = den > 0 ? (currDelivered / den * 100) : 0;
-            const gain = newSla - oldSla;
+        function renderCityRankings(list) {
+            // 1. Melhores (SLA > 80)
+            const best = list.filter(c => parseFloat(c.sla) >= 80).sort((a,b) => b.total - a.total);
+            document.getElementById('best-list').innerHTML = best.length ? best.map(c => `
+                <div class="grid grid-cols-12 gap-1 items-center p-2 border-b border-gray-100 hover:bg-emerald-50 text-xs">
+                    <div class="col-span-5 font-bold truncate text-gray-700" title="${c.name}">${c.name}</div>
+                    <div class="col-span-3 text-right text-gray-500">${c.total}</div>
+                    <div class="col-span-4 text-right font-black text-emerald-600">${c.sla}%</div>
+                </div>`).join('') : '<div class="p-4 text-center text-gray-400 text-xs">Vazio.</div>';
 
-            document.getElementById('evo-sla-orig').innerText = oldSla.toFixed(2) + '%';
-            document.getElementById('evo-sla-new').innerText = newSla.toFixed(2) + '%';
-            document.getElementById('evo-sla-gain').innerText = `+${gain.toFixed(2)}%`;
-            document.getElementById('evo-total-recov').innerText = recovered;
+            // 2. Piores (SLA < 80)
+            const worst = list.filter(c => parseFloat(c.sla) < 80).sort((a,b) => a.sla - b.sla);
+            document.getElementById('worst-list').innerHTML = worst.length ? worst.map(c => `
+                <div class="grid grid-cols-12 gap-1 items-center p-2 border-b border-gray-100 hover:bg-orange-50 text-xs">
+                    <div class="col-span-5 font-bold truncate text-gray-700" title="${c.name}">${c.name}</div>
+                    <div class="col-span-3 text-right text-gray-500">${c.total}</div>
+                    <div class="col-span-4 text-right font-black text-orange-600">${c.sla}%</div>
+                </div>`).join('') : '<div class="p-4 text-center text-gray-400 text-xs">Vazio.</div>';
 
-            renderRankTable('rank-driver-tbody', rankDriver, recovered);
-            renderRankTable('rank-city-tbody', rankCity, recovered);
-            renderEvoList(list);
+            // 3. OFENSORES DO GLOBAL (Maior Impacto Negativo)
+            // Ordenar por globalImpact (descrescente)
+            const impactList = list.sort((a,b) => b.globalImpact - a.globalImpact).slice(0, 50); // Top 50
+            document.getElementById('impact-list').innerHTML = impactList.map(c => {
+                const failures = c.total - c.ent;
+                // Se impacto for muito baixo, nem mostra, ou destaca os grandes
+                const isHeavy = parseFloat(c.globalImpact) > 1.0; 
+                return `
+                <div class="grid grid-cols-12 gap-1 items-center p-2 border-b border-gray-200 hover:bg-red-50 text-xs ${isHeavy ? 'bg-red-50/50' : ''}">
+                    <div class="col-span-5 font-bold truncate text-gray-800" title="${c.name}">${c.name}</div>
+                    <div class="col-span-3 text-right text-gray-500">${failures}</div>
+                    <div class="col-span-4 text-right font-black text-red-600">-${c.globalImpact}%</div>
+                </div>`;
+            }).join('');
         }
 
-        // --- RENDERERS ---
-        function renderCityTable(stats, ignore) {
-            const tbody = document.getElementById('city-tbody');
-            tbody.innerHTML = '';
-            const sorted = Object.entries(stats).sort((a,b) => b[1].total - a[1].total);
-            let c = 0;
-            sorted.forEach(([city, d]) => {
-                let den = d.total;
-                if(ignore) den -= d.sorting;
-                const sla = den > 0 ? (d.delivered / den * 100) : 0;
-                if(showLowSla && sla >= 95) return;
-                c++;
-                
-                let clr = sla >= 95 ? 'success' : (sla >= 70 ? 'warning' : 'danger');
-                let bar = sla >= 95 ? 'bg-success' : (sla >= 70 ? 'bg-warning' : 'bg-danger');
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="fw-bold">${city}</td>
-                        <td class="text-center">${d.total}</td>
-                        <td style="width:130px">
-                            <div class="d-flex align-items-center">
-                                <div class="progress flex-grow-1 me-2" style="height:6px"><div class="progress-bar ${bar}" style="width:${sla}%"></div></div>
-                                <span class="text-${clr} fw-bold small">${sla.toFixed(1)}%</span>
-                            </div>
-                        </td>
-                        <td class="text-center text-success fw-bold">${d.delivered}</td>
-                        <td class="text-center text-info fw-bold">${d.open}</td>
-                        <td class="text-center text-warning fw-bold">${d.stopped}</td>
-                        <td class="text-center text-danger fw-bold">${d.problems}</td>
-                        <td class="text-center fw-bold" style="color:var(--purple); background:#f3e8ff">${d.sorting}</td>
-                    </tr>
-                `;
+        // ... [Resto das funções: openGlobalPacketList, renderGlobalAuditTable, copyGlobalCodes, toggleModal, renderDriverAnalysis, renderPacketAudit, filterPackets, copyTableCodes, renderMainTable - Iguais à versão anterior] ...
+        
+        let globalAuditList = [];
+        function openGlobalPacketList(type) {
+            const selectedCityNorm = document.getElementById('filterCity').value;
+            const selectedDriver = document.getElementById('filterDriver').value;
+            let sourceData = globalPackets.filter(p => {
+                let matchCity = selectedCityNorm === "" || p.cityNorm === selectedCityNorm;
+                let matchDriver = selectedDriver === "" || p.driver === selectedDriver;
+                return matchCity && matchDriver;
             });
-            document.getElementById('city-count-badge').innerText = c;
+            const header = document.getElementById('modal-global-header');
+            const title = document.getElementById('modal-global-title');
+            if (type === 'problem') {
+                globalAuditList = sourceData.filter(p => p.hasProblem);
+                header.className = "bg-red-600 text-white p-4 flex justify-between items-center";
+                title.innerText = "Pacotes Problemáticos";
+            } else if (type === 'open') {
+                globalAuditList = sourceData.filter(p => p.isOpen);
+                header.className = "bg-blue-500 text-white p-4 flex justify-between items-center";
+                title.innerText = "Pacotes Em Aberto";
+            }
+            document.getElementById('modal-global-count').innerText = globalAuditList.length;
+            renderGlobalAuditTable();
+            toggleModal('modal-global-audit');
         }
+        function renderGlobalAuditTable() {
+            const tbody = document.getElementById('modal-global-body');
+            const viewList = globalAuditList.slice(0, 500); 
+            tbody.innerHTML = viewList.length ? viewList.map(p => `
+                <tr class="hover:bg-gray-50 border-b border-gray-100">
+                    <td class="px-4 py-2 font-mono font-bold select-all">${p.id}</td>
+                    <td class="px-4 py-2">${p.city}</td>
+                    <td class="px-4 py-2 text-gray-600">${p.driver}</td>
+                    <td class="px-4 py-2 italic text-gray-500 truncate max-w-xs">${p.problemDesc || '-'}</td>
+                </tr>`).join('') : `<tr><td colspan="4" class="p-8 text-center text-gray-400">Vazio.</td></tr>`;
+            if (globalAuditList.length > 500) tbody.innerHTML += `<tr><td colspan="4" class="p-2 text-center text-xs text-gray-400 bg-gray-50">Exibindo 500 de ${globalAuditList.length}...</td></tr>`;
+        }
+        function copyGlobalCodes() {
+            if(!globalAuditList.length) return alert("Vazio.");
+            navigator.clipboard.writeText(globalAuditList.map(p => p.id).join('\n')).then(() => alert("Copiado!"));
+        }
+        function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
+        window.toggleModal = toggleModal; window.openGlobalPacketList = openGlobalPacketList; window.copyGlobalCodes = copyGlobalCodes;
 
-        function renderRecordsTable() {
-            const tbody = document.getElementById('records-tbody');
-            tbody.innerHTML = '';
-            const list = filteredData.filter(r => {
-                const info = getStatus(r);
-                return currentKpi === 'total' ? true : info.finalStatus === currentKpi;
+        function renderDriverAnalysis(packets) {
+            const driverStats = {};
+            packets.forEach(p => {
+                if(!driverStats[p.driver]) driverStats[p.driver] = { name: p.driver, total: 0, ok: 0, nok: 0, open: 0 };
+                driverStats[p.driver].total++;
+                if(p.isEntregue) driverStats[p.driver].ok++; else if(p.hasProblem) driverStats[p.driver].nok++; else driverStats[p.driver].open++;
             });
-            document.getElementById('table-title').innerText = `Registros: ${currentKpi.toUpperCase()}`;
-            
-            list.slice(0, 300).forEach(r => {
-                const info = getStatus(r);
-                const recBadge = info.isRecovered ? '<span class="badge bg-success ms-2">Recuperado</span>' : '';
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${r['Remessa']||''}</td>
-                        <td><span class="fw-bold text-${getColor(info.finalStatus)}">${info.finalStatus.toUpperCase()}</span>${recBadge}</td>
-                        <td>${r['Cidade Destino']||''}</td>
-                        <td class="text-danger small">${info.prob}</td>
-                        <td>${info.code}</td>
-                    </tr>
-                `;
-            });
+            const drivers = Object.values(driverStats).map(d => { d.sla = d.total > 0 ? ((d.ok / d.total) * 100).toFixed(1) : 0; return d; }).filter(d => parseFloat(d.sla) < 90).sort((a,b) => b.total - a.total).slice(0, 10);
+            document.getElementById('driver-rank-list').innerHTML = drivers.length ? drivers.map(d => `
+                <tr class="hover:bg-indigo-50 border-b border-indigo-50">
+                    <td class="px-6 py-2 font-bold text-gray-700">${d.name}</td>
+                    <td class="px-4 py-2 text-right font-mono">${d.total}</td>
+                    <td class="px-4 py-2 text-right text-emerald-600">${d.ok}</td>
+                    <td class="px-4 py-2 text-right text-red-500 font-bold">${d.nok}</td>
+                    <td class="px-4 py-2 text-right text-blue-500 font-bold">${d.open}</td>
+                    <td class="px-6 py-2 text-right font-black text-red-600">${d.sla}%</td>
+                </tr>`).join('') : '<tr><td colspan="6" class="p-4 text-center text-gray-500 italic">Nenhum crítico.</td></tr>';
         }
-
-        function renderRankTable(elId, map, total) {
-            const tbody = document.getElementById(elId);
-            tbody.innerHTML = '';
-            const sorted = Object.entries(map).sort((a,b) => b[1] - a[1]).slice(0, 5);
-            sorted.forEach(([k, v]) => {
-                const pct = total > 0 ? (v/total*100).toFixed(1) : 0;
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="fw-bold">${k}</td>
-                        <td class="text-center fw-bold text-success">${v}</td>
-                        <td><small class="text-muted">${pct}%</small></td>
-                    </tr>
-                `;
-            });
-            if(sorted.length === 0) tbody.innerHTML = '<tr><td colspan="3" class="text-center small text-muted">Sem dados</td></tr>';
+        
+        let auditPacketsCache = [];
+        function renderPacketAudit(packets) {
+            auditPacketsCache = packets.filter(p => !p.isEntregue);
+            document.getElementById('count-all').innerText = auditPacketsCache.length;
+            document.getElementById('count-prob').innerText = auditPacketsCache.filter(p => p.hasProblem).length;
+            document.getElementById('count-open').innerText = auditPacketsCache.filter(p => p.isOpen).length;
+            filterPackets('all');
         }
-
-        function renderEvoList(list) {
-            const tbody = document.getElementById('evo-list-tbody');
-            tbody.innerHTML = '';
-            list.slice(0, 200).forEach(r => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="fw-bold">${r['Remessa']}</td>
-                        <td>${r['Cidade Destino']}</td>
-                        <td class="text-danger">${r.statusOrig}</td>
-                        <td class="text-primary fw-bold">${r.recoveredDriver}</td>
-                    </tr>
-                `;
-            });
+        function filterPackets(mode) {
+            const btnAll = document.getElementById('btn-pkt-all'); const btnProb = document.getElementById('btn-pkt-prob'); const btnOpen = document.getElementById('btn-pkt-open');
+            [btnAll, btnProb, btnOpen].forEach(b => b.className = "px-3 py-1 text-xs font-bold rounded hover:bg-white transition text-gray-500");
+            let list = [];
+            if(mode === 'all') { list = auditPacketsCache; btnAll.className = "px-3 py-1 text-xs font-bold rounded bg-white shadow border border-gray-200 text-gray-800"; }
+            if(mode === 'problem') { list = auditPacketsCache.filter(p => p.hasProblem); btnProb.className = "px-3 py-1 text-xs font-bold rounded bg-red-50 shadow border border-red-200 text-red-700"; }
+            if(mode === 'open') { list = auditPacketsCache.filter(p => p.isOpen); btnOpen.className = "px-3 py-1 text-xs font-bold rounded bg-blue-50 shadow border border-blue-200 text-blue-700"; }
+            filteredPackets = list;
+            const tbody = document.getElementById('packet-list-body');
+            tbody.innerHTML = list.length ? list.map(p => `
+                <tr class="hover:bg-gray-50 border-b border-gray-100">
+                    <td class="px-4 py-2 font-mono font-bold select-all">${p.id}</td>
+                    <td class="px-4 py-2 text-gray-600 text-[10px]">${p.driver}</td>
+                    <td class="px-4 py-2 text-gray-500 italic truncate max-w-xs">${p.problemDesc || '-'}</td>
+                    <td class="px-4 py-2 text-center">${p.hasProblem ? '<span class="px-2 py-0.5 rounded bg-red-100 text-red-700 text-[9px] font-bold">PROBLEMA</span>' : '<span class="px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-[9px] font-bold">ABERTO</span>'}</td>
+                </tr>`).join('') : `<tr><td colspan="4" class="p-8 text-center text-gray-400">Vazio.</td></tr>`;
         }
-
-        // --- UTILS ---
-        function switchTab(view) {
-            document.getElementById('view-overview').style.display = view === 'overview' ? 'block' : 'none';
-            document.getElementById('view-evolution').style.display = view === 'evolution' ? 'block' : 'none';
-            
-            document.getElementById('tab-overview').classList.toggle('active', view === 'overview');
-            document.getElementById('tab-evolution').classList.toggle('active', view === 'evolution');
+        function copyTableCodes() {
+            if(!filteredPackets.length) return alert("Vazio.");
+            navigator.clipboard.writeText(filteredPackets.map(p => p.id).join('\n')).then(() => alert("Copiado!"));
         }
+        window.filterPackets = filterPackets; window.copyTableCodes = copyTableCodes;
 
-        function toggleTabState(enabled) {
-            const tab = document.getElementById('tab-evolution');
-            if(enabled) tab.classList.remove('disabled');
-            else tab.classList.add('disabled');
+        function renderMainTable(list) {
+            const sorted = list.sort((a,b) => b.total - a.total);
+            document.getElementById('main-table').innerHTML = sorted.map(c => `
+                <tr class="hover:bg-blue-50 transition border-b border-gray-100">
+                    <td class="px-6 py-3 font-semibold text-gray-700">${c.name} ${c.isTriagem ? '<span class="ml-2 px-2 py-0.5 bg-orange-100 text-orange-700 text-[9px] rounded font-bold uppercase">TRIAGEM</span>' : ''}</td>
+                    <td class="px-4 py-3 text-right font-bold text-gray-800">${c.total}</td>
+                    <td class="px-4 py-3 text-right text-emerald-600">${c.ent}</td>
+                    <td class="px-4 py-3 text-right text-red-500">${c.prob}</td>
+                    <td class="px-4 py-3 text-right text-blue-500">${c.open}</td>
+                    <td class="px-6 py-3 text-right font-bold ${parseFloat(c.sla) >= 80 ? 'text-emerald-600' : (parseFloat(c.sla) < 79 ? 'text-red-600' : 'text-yellow-600')}">${c.sla}%</td>
+                </tr>`).join('');
         }
-
-        function initDropdowns() {
-            const cSel = document.getElementById('filterCity');
-            const dSel = document.getElementById('filterDriver');
-            const cities = [...new Set(rawData.map(r => r['Cidade Destino']).filter(Boolean))].sort();
-            const drivers = [...new Set(rawData.map(r => r['Entregador']).filter(Boolean))].sort();
-            cSel.innerHTML = '<option value="all">Todas as Cidades</option>';
-            dSel.innerHTML = '<option value="all">Todos os Entregadores</option>';
-            cities.forEach(c => cSel.innerHTML += `<option value="${c}">${c}</option>`);
-            drivers.forEach(d => dSel.innerHTML += `<option value="${d}">${d}</option>`);
-        }
-
-        function setKpi(cat) {
-            currentKpi = cat;
-            document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('active'));
-            document.getElementById('kpi-'+cat).classList.add('active');
-            renderRecordsTable();
-        }
-
-        function getColor(st) {
-            if(st==='delivered') return 'success';
-            if(st==='sorting') return 'dark';
-            if(st==='stopped') return 'warning';
-            if(st==='problems') return 'danger';
-            return 'info';
-        }
-
-        function toggleLowSla() {
-            showLowSla = !showLowSla;
-            const btn = document.getElementById('btnLowSla');
-            btn.classList.toggle('btn-outline-danger');
-            btn.classList.toggle('btn-danger');
-            recalculateAll();
-        }
-
-        function copyData() {
-            const list = filteredData.filter(r => {
-                const info = getStatus(r);
-                return currentKpi === 'total' ? true : info.finalStatus === currentKpi;
-            });
-            const txt = list.map(r => r['Remessa']).join('\n');
-            navigator.clipboard.writeText(txt).then(() => alert('Copiado!'));
-        }
-
-        function resetFilters() {
-            document.getElementById('filterCity').value = 'all';
-            document.getElementById('filterDriver').value = 'all';
-            showLowSla = false;
-            document.getElementById('btnLowSla').classList.remove('btn-danger');
-            document.getElementById('btnLowSla').classList.add('btn-outline-danger');
-            applyFilters();
-        }
-
     </script>
 </body>
 </html>
