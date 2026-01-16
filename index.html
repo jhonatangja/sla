@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard SLA 7.0 - Impacto Global</title>
+    <title>Dashboard SLA 7.1 - Simulador de Abrangência</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -14,6 +14,15 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem; -webkit-appearance: none; appearance: none; }
         .clickable-card:hover { transform: translateY(-2px); cursor: pointer; filter: brightness(0.95); transition: all 0.2s; }
+        
+        /* Estilo do Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #68D391;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #68D391;
+        }
     </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
@@ -79,23 +88,33 @@
             </div>
             
             <div class="flex flex-col md:flex-row gap-2 w-full xl:w-auto items-center">
-                <button onclick="toggleModal('modal-prazos')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition shadow-lg w-full md:w-auto">
+                <div class="flex items-center mr-2 bg-slate-800 p-2 rounded-lg border border-slate-700 h-[42px]">
+                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle" id="toggleQuiri" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-slate-600 transition-all duration-300 left-0" checked/>
+                        <label for="toggleQuiri" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-600 cursor-pointer"></label>
+                    </div>
+                    <label for="toggleQuiri" class="text-xs font-bold text-white cursor-pointer select-none">
+                        Incluir Região Quirinópolis
+                    </label>
+                </div>
+
+                <button onclick="toggleModal('modal-prazos')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition shadow-lg w-full md:w-auto h-[42px]">
                     <i class="fas fa-calendar-alt mr-2"></i> Prazos
                 </button>
 
-                <div class="relative w-full md:w-40">
-                    <select id="filterCity" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500 cursor-pointer font-medium">
+                <div class="relative w-full md:w-40 h-[42px]">
+                    <select id="filterCity" class="w-full h-full bg-slate-800 border border-slate-700 text-white text-xs rounded-lg px-2.5 focus:ring-blue-500 focus:border-blue-500 cursor-pointer font-medium">
                         <option value="">Todas as Cidades</option>
                     </select>
                 </div>
 
-                <div class="relative w-full md:w-40">
-                    <select id="filterDriver" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500 cursor-pointer font-medium">
+                <div class="relative w-full md:w-40 h-[42px]">
+                    <select id="filterDriver" class="w-full h-full bg-slate-800 border border-slate-700 text-white text-xs rounded-lg px-2.5 focus:ring-blue-500 focus:border-blue-500 cursor-pointer font-medium">
                         <option value="">Todos Motoristas</option>
                     </select>
                 </div>
 
-                <label class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-lg cursor-pointer text-sm font-bold transition shadow-lg flex items-center justify-center w-full md:w-auto whitespace-nowrap">
+                <label class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-lg cursor-pointer text-sm font-bold transition shadow-lg flex items-center justify-center w-full md:w-auto whitespace-nowrap h-[42px]">
                     <i class="fas fa-file-excel mr-2"></i> Upload
                     <input type="file" id="fileUpload" accept=".xlsx, .xls" class="hidden"/>
                 </label>
@@ -273,6 +292,23 @@
         ];
         const WHITELIST = RAW_WHITELIST.map(c => normalizeStr(c));
 
+        // Lista de cidades para simulação de exclusão
+        const QUIRINOPOLIS_BLOCK = [
+            "QUIRINOPOLIS",
+            "SAO SIMAO",
+            "ITARUMA",
+            "PARANAIGUARA",
+            "CACHOEIRA ALTA",
+            "APORE",
+            "GOUVELANDIA",
+            "CACU",
+            "INACIOLANDIA",
+            "ITAJA",
+            "APARECIDA DO RIO DOCE",
+            "CASTELANDIA",
+            "LAGOA SANTA"
+        ];
+
         let globalPackets = [];
         let filteredPackets = []; 
         let cityDeadlines = {};
@@ -297,6 +333,7 @@
 
         document.getElementById('filterCity').addEventListener('change', updateDashboard);
         document.getElementById('filterDriver').addEventListener('change', updateDashboard);
+        document.getElementById('toggleQuiri').addEventListener('change', updateDashboard);
 
         function normalizeStr(str) {
             return String(str).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
@@ -363,12 +400,20 @@
         function updateDashboard() {
             const selectedCityNorm = document.getElementById('filterCity').value;
             const selectedDriver = document.getElementById('filterDriver').value;
+            const includeQuiri = document.getElementById('toggleQuiri').checked;
 
             // Filtro
             let currentData = globalPackets.filter(p => {
                 let matchCity = selectedCityNorm === "" || p.cityNorm === selectedCityNorm;
                 let matchDriver = selectedDriver === "" || p.driver === selectedDriver;
-                return matchCity && matchDriver;
+                
+                // Se o toggle estiver DESLIGADO (!includeQuiri), removemos as cidades da lista
+                let matchRegion = true;
+                if (!includeQuiri && QUIRINOPOLIS_BLOCK.includes(p.cityNorm)) {
+                    matchRegion = false;
+                }
+
+                return matchCity && matchDriver && matchRegion;
             });
 
             // Definir Base Total para cálculo de impacto
@@ -458,17 +503,21 @@
             }).join('');
         }
 
-        // ... [Resto das funções: openGlobalPacketList, renderGlobalAuditTable, copyGlobalCodes, toggleModal, renderDriverAnalysis, renderPacketAudit, filterPackets, copyTableCodes, renderMainTable - Iguais à versão anterior] ...
-        
         let globalAuditList = [];
         function openGlobalPacketList(type) {
             const selectedCityNorm = document.getElementById('filterCity').value;
             const selectedDriver = document.getElementById('filterDriver').value;
+            const includeQuiri = document.getElementById('toggleQuiri').checked;
+
             let sourceData = globalPackets.filter(p => {
                 let matchCity = selectedCityNorm === "" || p.cityNorm === selectedCityNorm;
                 let matchDriver = selectedDriver === "" || p.driver === selectedDriver;
-                return matchCity && matchDriver;
+                let matchRegion = true;
+                if (!includeQuiri && QUIRINOPOLIS_BLOCK.includes(p.cityNorm)) matchRegion = false;
+                
+                return matchCity && matchDriver && matchRegion;
             });
+
             const header = document.getElementById('modal-global-header');
             const title = document.getElementById('modal-global-title');
             if (type === 'problem') {
